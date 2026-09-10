@@ -11,8 +11,6 @@ variables:
 test-backend:
   stage: test
   image: node:20
-  tags:
-    - "66160014"
   script:
     - cd backend
     - npm ci
@@ -22,8 +20,6 @@ test-backend:
 test-frontend:
   stage: test
   image: node:20
-  tags:
-    - "66160014"
   script:
     - cd frontend
     - npm ci
@@ -34,8 +30,6 @@ test-frontend:
 build_images:
   stage: build
   image: docker:latest
-  tags:
-    - "66160014"
   script:
     - docker build -t $DOCKER_USER/$BACKEND_IMAGE:latest ./backend
     - docker build -t $DOCKER_USER/$FRONTEND_IMAGE:latest ./frontend
@@ -43,8 +37,6 @@ build_images:
 push_images:
   stage: push
   image: docker:latest
-  tags:
-    - "66160014"
   script:
     - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
     - docker push $DOCKER_USER/$BACKEND_IMAGE:latest
@@ -54,8 +46,6 @@ push_images:
 deploy:
   stage: deploy
   image: docker:latest
-  tags:
-    - "66160014"
   when: manual
   script:
     - docker rm -f todo-backend || true
