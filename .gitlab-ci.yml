@@ -1,0 +1,67 @@
+stages:
+  - test
+  - build
+  - push
+  - deploy
+
+variables:
+  BACKEND_IMAGE: "todo-backend"
+  FRONTEND_IMAGE: "todo-frontend"
+
+test-backend:
+  stage: test
+  image: node:20
+  tags:
+    - "66160014"
+  script:
+    - cd backend
+    - npm ci
+    - npm audit || true
+    - npm test
+
+test-frontend:
+  stage: test
+  image: node:20
+  tags:
+    - "66160014"
+  script:
+    - cd frontend
+    - npm ci
+    - npm audit || true
+    - npm test
+
+
+build_images:
+  stage: build
+  image: docker:latest
+  tags:
+    - "66160014"
+  script:
+    - docker build -t $DOCKER_USER/$BACKEND_IMAGE:latest ./backend
+    - docker build -t $DOCKER_USER/$FRONTEND_IMAGE:latest ./frontend
+
+push_images:
+  stage: push
+  image: docker:latest
+  tags:
+    - "66160014"
+  script:
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
+    - docker push $DOCKER_USER/$BACKEND_IMAGE:latest
+    - docker push $DOCKER_USER/$FRONTEND_IMAGE:latest
+
+
+deploy:
+  stage: deploy
+  image: docker:latest
+  tags:
+    - "66160014"
+  when: manual
+  script:
+    - docker rm -f todo-backend || true
+    - docker run -d --name todo-backend -p 3001:3001 $DOCKER_USER/$BACKEND_IMAGE:latest
+
+    - docker rm -f todo-frontend || true
+    - docker run -d --name todo-frontend -p 3000:80 $DOCKER_USER/$FRONTEND_IMAGE:latest
+
+    - docker ps
